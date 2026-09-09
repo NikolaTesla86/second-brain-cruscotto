@@ -1,0 +1,358 @@
+<title>Cruscotto Doppia Dipendenza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme:light;
+    --ground:#F4F6F9; --surface:#FFFFFF; --surface-2:#EEF2F7;
+    --ink:#16202B; --ink-2:#5B6672; --ink-3:#8A95A1;
+    --hair:#D9DEE5; --hair-2:#C5CCD5;
+    --accent:#1F3A5F; --accent-ink:#FFFFFF; --accent-soft:#E3EAF3;
+    --good:#0ca30c; --warn:#fab219; --crit:#d03b3b; --nd:#8A95A1;
+    --good-bg:#E6F6E6; --warn-bg:#FFF4D6; --crit-bg:#FBE4E4; --nd-bg:#EEF0F2;
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --grid:#E6E9ED; --axis:#C5CCD5;
+    --shadow:0 1px 2px rgba(22,32,43,.06),0 4px 14px rgba(22,32,43,.05);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --ground:#0F1419; --surface:#171E26; --surface-2:#1F2831;
+      --ink:#F2F5F8; --ink-2:#A9B4C0; --ink-3:#7C8792;
+      --hair:#2A333D; --hair-2:#3A4550;
+      --accent:#8FB3E0; --accent-ink:#0F1419; --accent-soft:#22324A;
+      --good:#0ca30c; --warn:#fab219; --crit:#d03b3b; --nd:#7C8792;
+      --good-bg:#12301A; --warn-bg:#3A2E10; --crit-bg:#3E1A1A; --nd-bg:#242C34;
+      --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#242C34; --axis:#3A4550;
+      --shadow:none;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --ground:#0F1419; --surface:#171E26; --surface-2:#1F2831;
+    --ink:#F2F5F8; --ink-2:#A9B4C0; --ink-3:#7C8792;
+    --hair:#2A333D; --hair-2:#3A4550;
+    --accent:#8FB3E0; --accent-ink:#0F1419; --accent-soft:#22324A;
+    --good:#0ca30c; --warn:#fab219; --crit:#d03b3b; --nd:#7C8792;
+    --good-bg:#12301A; --warn-bg:#3A2E10; --crit-bg:#3E1A1A; --nd-bg:#242C34;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --grid:#242C34; --axis:#3A4550;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.5 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+  a{color:var(--accent)}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 56px}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+  .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+  h1{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:30px;line-height:1.15;margin:4px 0 0;text-wrap:balance}
+  h2{font-family:"Source Serif 4",Georgia,serif;font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+  h3{font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin:0}
+  .meta{color:var(--ink-2);font-size:14px;text-align:right}
+  .meta strong{color:var(--ink)}
+  section{margin-top:28px}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+  .sec-head p{margin:0;color:var(--ink-2);max-width:68ch}
+  .grid{display:grid;gap:14px}
+  .tiles{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+  .card{background:var(--surface);border:1px solid var(--hair);border-radius:6px;box-shadow:var(--shadow);padding:16px 18px}
+  .tile .label{font-size:13px;color:var(--ink-2);font-weight:600}
+  .tile .value{font-size:40px;font-weight:600;line-height:1.05;margin:6px 0 4px;letter-spacing:-.01em}
+  .tile .value small{font-size:18px;color:var(--ink-2);font-weight:500;margin-left:4px}
+  .tile .sub{font-size:13px;color:var(--ink-2)}
+  .tile.scen .value{font-size:26px}
+  /* stati */
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 7px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap;line-height:1.5}
+  .pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+  .pill.crit{color:var(--crit);background:var(--crit-bg)} .pill.crit::before{border-radius:1px}
+  .pill.warn{color:#7A5200;background:var(--warn-bg)} .pill.warn::before{background:var(--warn);border-radius:0;transform:rotate(45deg);width:7px;height:7px}
+  :root[data-theme="dark"] .pill.warn{color:var(--warn)}
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .pill.warn{color:var(--warn)} }
+  .pill.good{color:#0A6B0A;background:var(--good-bg)} .pill.good::before{background:var(--good)}
+  :root[data-theme="dark"] .pill.good{color:#5CD65C}
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .pill.good{color:#5CD65C} }
+  .pill.nd{color:var(--ink-2);background:var(--nd-bg)} .pill.nd::before{background:var(--nd);opacity:.7}
+  /* segnali scenari */
+  .signals{grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))}
+  .sig .name{font-weight:600;margin-bottom:6px}
+  .sig .now{font-size:13.5px;color:var(--ink-2);margin:0 0 8px}
+  .sig .points{display:flex;gap:6px;align-items:center;font-size:12.5px;font-weight:700;letter-spacing:.04em}
+  .sig .points span{padding:2px 8px;border-radius:4px;background:var(--surface-2);color:var(--ink-3)}
+  .sig .points span.on{background:var(--accent);color:var(--accent-ink)}
+  .sig .points span.wait{background:var(--surface-2);color:var(--ink-2);border:1px dashed var(--hair-2)}
+  /* cruscotto */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar label{font-size:13px;color:var(--ink-2);font-weight:600}
+  .seg{display:inline-flex;border:1px solid var(--hair-2);border-radius:6px;overflow:hidden}
+  .seg button{background:var(--surface);color:var(--ink-2);border:0;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+  .seg button:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .areas{grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))}
+  .area .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--hair)}
+  .area .count{font-size:12.5px;color:var(--ink-2)}
+  .ind{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--hair)}
+  .ind:last-child{border-bottom:0;padding-bottom:2px}
+  .ind .n{font-weight:600}
+  .ind .v{font-size:14px;color:var(--ink);grid-column:1/-1}
+  .ind .v b{font-weight:700}
+  .ind .t{font-size:12.5px;color:var(--ink-2);grid-column:1/-1}
+  .ind .t span{margin-right:12px}
+  .ind.hide{display:none}
+  /* grafici */
+  .charts{grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr))}
+  .card{min-width:0}
+  .chart .head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+  .chart .head p{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
+  .chart .tv{background:none;border:1px solid var(--hair-2);border-radius:5px;color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;padding:4px 9px;cursor:pointer;white-space:nowrap}
+  .chart svg{width:100%;height:auto;display:block;overflow:visible}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-top:6px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+  .chart table{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:6px}
+  .chart th,.chart td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--hair)}
+  .chart th:first-child,.chart td:first-child{text-align:left}
+  .chart .tbl{display:none}
+  .chart.table .tbl{display:block} .chart.table .plot,.chart.table .legend{display:none}
+  .tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--ground);padding:6px 9px;border-radius:5px;font-size:12.5px;line-height:1.4;opacity:0;transform:translate(-50%,calc(-100% - 10px));transition:opacity .12s;white-space:nowrap;z-index:9}
+  @media (prefers-reduced-motion:reduce){.tip{transition:none}}
+  .tip.on{opacity:1}
+  .grid-line{stroke:var(--grid);stroke-width:1}
+  .axis-line{stroke:var(--axis);stroke-width:1}
+  .tick{fill:var(--ink-3);font-size:11px;font-variant-numeric:tabular-nums}
+  .dl{fill:var(--ink-2);font-size:11.5px;font-weight:600}
+  .ref{stroke:var(--hair-2);stroke-width:1}
+  .ref-l{fill:var(--ink-3);font-size:10.5px}
+  footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--hair);font-size:13px;color:var(--ink-2)}
+  footer p{max-width:80ch;margin:0 0 8px}
+  .src{font-size:12.5px;color:var(--ink-3)}
+  @media (max-width:640px){ h1{font-size:24px} .tile .value{font-size:32px} .meta{text-align:left} }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Sicurezza energetica dell'Italia · Monitoraggio</div>
+      <h1>Cruscotto della doppia dipendenza</h1>
+    </div>
+    <div class="meta">Dati aggiornati al <strong>2 settembre 2026</strong><br>20 indicatori · 6 aree · soglie di attenzione del rapporto (sez. 5)</div>
+  </header>
+
+  <section>
+    <div class="sec-head"><h2>Lettura d'insieme</h2><p>Che cosa dicono gli indicatori presi insieme. Le soglie sono quelle definite nel rapporto, ricavate dall'esperienza del 2022 e del 2026.</p></div>
+    <div class="grid tiles" id="tiles"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>In quale scenario ci troviamo</h2><p>I cinque segnali che distinguono gli scenari al 2030 (A transizione ordinata · B tensione prolungata · C shock combinato) e dove puntano oggi.</p></div>
+    <div class="grid signals" id="signals"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Il cruscotto</h2><p>Ogni indicatore con valore attuale, soglia di attenzione, fonte e cadenza. Lo stato è misurato contro la soglia; dove il dato non è disponibile in fonte aperta è indicato.</p></div>
+    <div class="toolbar">
+      <label for="f-all">Mostra</label>
+      <div class="seg" role="group" aria-label="Filtro indicatori">
+        <button id="f-all" aria-pressed="true" data-f="all">Tutti</button>
+        <button aria-pressed="false" data-f="crit">Oltre soglia</button>
+        <button aria-pressed="false" data-f="warn">Al limite</button>
+      </div>
+    </div>
+    <div class="grid areas" id="areas"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Tre serie da tenere d'occhio</h2><p>I grafici mostrano le grandezze che nell'estate 2026 hanno anticipato la tensione. Passa il mouse sui punti per i valori; ogni grafico ha una vista tabella.</p></div>
+    <div class="grid charts">
+      <div class="card chart" id="c-stock">
+        <div class="head"><div><h3>Stoccaggi di gas, 2026</h3><p>Riempimento in % della capacità: Italia e media dell'Unione europea, con le soglie del cruscotto.</p></div><button class="tv" type="button">Vista tabella</button></div>
+        <div class="plot"></div><div class="legend"></div><div class="tbl"></div>
+      </div>
+      <div class="card chart" id="c-import">
+        <div class="head"><div><h3>Import elettrico per frontiera</h3><p>Saldo netto (import meno export) in terawattora, 2023-2025. Dati aperti Terna.</p></div><button class="tv" type="button">Vista tabella</button></div>
+        <div class="plot"></div><div class="legend"></div><div class="tbl"></div>
+      </div>
+      <div class="card chart" id="c-fer">
+        <div class="head"><div><h3>Quota rinnovabili sulla domanda</h3><p>Mesi estivi 2026 a confronto con lo stesso mese del 2025. Dati Terna.</p></div><button class="tv" type="button">Vista tabella</button></div>
+        <div class="plot"></div><div class="legend"></div><div class="tbl"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Metodo.</strong> Il cruscotto riproduce la sezione 5 del rapporto <em>La doppia dipendenza</em> (settembre 2026). I valori provengono dalle note validate del Second Brain: fonti primarie (Terna, Snam, ARERA, ENTSO-E, GIE/AGSI) e stampa specializzata con doppia fonte per i dati 2026. Le serie elettriche derivano dal data lake costruito con l'interfaccia pubblica di Terna e verificate contro Ember/Enerdata.</p>
+    <p><strong>Come si legge.</strong> <span class="pill crit">Oltre soglia</span> la soglia di attenzione è superata · <span class="pill warn">Al limite</span> il valore è sulla soglia o si sta avvicinando · <span class="pill good">Sotto soglia</span> nessun segnale · <span class="pill nd">Non disponibile</span> dato non reperibile in fonte aperta.</p>
+    <p class="src">Aggiornamento manuale: i valori sono nel blocco <code>DATI</code> in testa allo script della pagina. Cadenze consigliate: settimanale per gas e prezzi (settembre-marzo), mensile per l'elettrico (giugno-settembre), annuale per la velocità della transizione.</p>
+  </footer>
+</div>
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================== DATI (aggiornare qui) ===================== */
+const DATA_DATE = "2 settembre 2026";
+const SCENARIO = { code:"B", name:"Tensione prolungata", why:"Hormuz semicronico, stoccaggi UE ai minimi, estate 2026 con doppia depressione idro-eolico; nucleare francese disponibile e capacità termica non ancora uscita: non è lo scenario C." };
+
+// stato: crit = oltre soglia · warn = al limite · good = sotto soglia · nd = non disponibile
+const AREAS = [
+ { id:"gv", name:"Gas: volume", ind:[
+   { n:"Livello stoccaggi Italia e media UE", v:"Italia <b>>82%</b> · UE <b>63%</b> (fine agosto)", soglia:"Italia <75% al 1° ottobre; UE <65%", st:"crit", src:"GIE/AGSI", freq:"Settimanale", when:"28 ago 2026", note:"Italia sopra soglia; l'Unione sotto, ai minimi da 13 anni." },
+   { n:"Scostamento stoccaggi Italia sull'anno precedente", v:"<b>−5,8 punti</b> (78,2% contro 84% al 13 agosto)", soglia:"Oltre −5 punti", st:"crit", src:"GIE/AGSI", freq:"Mensile", when:"13 ago 2026" },
+   { n:"Forza maggiore Qatar e transito Hormuz", v:"Forza maggiore <b>estesa a novembre</b>; Hormuz bloccato da marzo", soglia:"Ogni estensione oltre il trimestre", st:"crit", src:"QatarEnergy, IEA", freq:"Continuo", when:"31 ago 2026" },
+   { n:"Origine dei carichi GNL (quota USA)", v:"<b>62%</b> dei carichi nel primo semestre (47% un anno prima)", soglia:"Quota USA >70%", st:"warn", src:"Snam, S&P Global", freq:"Trimestrale", when:"H1 2026", note:"Sotto soglia ma in rapida crescita." },
+   { n:"Utilizzo dei rigassificatori italiani", v:"Non disponibile in fonte aperta", soglia:"Oltre 85% in inverno", st:"nd", src:"Snam", freq:"Mensile", when:"—" } ]},
+ { id:"gp", name:"Gas: prezzo", ind:[
+   { n:"Prezzo europeo TTF e differenziale con il PSV", v:"TTF <b>~69 €/MWh</b> (massimo da 3 anni; sopra 60 dal 18 luglio) · differenziale PSV-TTF <b>4 €</b>", soglia:"TTF >60 €/MWh per un mese; differenziale >4", st:"crit", src:"Borse (TTF, PSV)", freq:"Giornaliero", when:"31 ago 2026" },
+   { n:"Scadenze contrattuali di importazione", v:"Circa <b>metà</b> dei contratti di lungo periodo scade entro 5 anni", soglia:"Rinegoziazioni in mercato teso", st:"warn", src:"ARERA", freq:"Annuale", when:"2025" } ]},
+ { id:"ev", name:"Elettricità: volume", ind:[
+   { n:"Saldo import per frontiera (Francia + Svizzera)", v:"<b>86%</b> del saldo netto nel 2025 (40,2 su 46,9 TWh)", soglia:"Francia + Svizzera >88%", st:"warn", src:"Terna, dati aperti", freq:"Mensile", when:"2025" },
+   { n:"Disponibilità del parco nucleare francese", v:"Non acquisita (fonte RTE)", soglia:"Sotto 40 GW disponibili in estate", st:"nd", src:"RTE", freq:"Settimanale", when:"—" },
+   { n:"Quota rinnovabili sulla domanda vs anno precedente", v:"Luglio <b>41,5%</b> contro 44,5% (<b>−3 punti</b>); giugno 47% contro 49,5%", soglia:"Calo oltre 3 punti in un mese estivo", st:"warn", src:"Terna, rapporto mensile", freq:"Mensile", when:"lug 2026" },
+   { n:"Idraulicità e produzione idroelettrica", v:"Luglio <b>−14,9%</b>; giugno <b>−23,7%</b> (soglia superata)", soglia:"Idro sotto −15% sul mese", st:"warn", src:"Terna; ISPRA", freq:"Mensile", when:"lug 2026" },
+   { n:"Picco di domanda", v:"<b>58,0 GW</b> il 15 luglio (+4,5% sul 2025; record storico 60,5)", soglia:"Oltre 58 GW; oltre 60 = record", st:"warn", src:"Terna", freq:"Estivo", when:"15 lug 2026" } ]},
+ { id:"ep", name:"Elettricità: prezzo", ind:[
+   { n:"PUN medio mensile e picchi giornalieri", v:"Media luglio <b>157 €/MWh</b> · picco <b>~207 €/MWh</b> il 5 agosto", soglia:"Media >150 €/MWh; picco >200", st:"crit", src:"GME", freq:"Giornaliero", when:"5 ago 2026" } ]},
+ { id:"vt", name:"Velocità della transizione", ind:[
+   { n:"Accumuli installati vs traiettoria al 2030", v:"<b>19,4 GWh</b> a luglio 2026; traiettoria lineare verso 71,5 GWh: ~24 GWh", soglia:"Sotto la traiettoria lineare", st:"crit", src:"Terna", freq:"Trimestrale", when:"lug 2026" },
+   { n:"Esito aste accumuli (MACSE) e mercato della capacità", v:"Prima asta: offerte <b>4×</b> la domanda, prezzi molto sotto il tetto · prossima asta <b>24 novembre 2026</b>", soglia:"Asta scoperta o prezzi al tetto", st:"good", src:"Terna, ARERA", freq:"Annuale", when:"set 2025" },
+   { n:"Avanzamento opere: Tirrenico, Adriatico, Tunisia", v:"Nei tempi: <b>2028 · 2029 · 2028</b>", soglia:"Slittamento oltre 12 mesi", st:"good", src:"Terna", freq:"Semestrale", when:"2025" },
+   { n:"Capacità termica in dismissione", v:"<b>>26 GW</b> attesi in uscita entro il 2030", soglia:"Uscite oltre le entrate in accumuli", st:"warn", src:"Terna, Rapporto Adeguatezza", freq:"Annuale", when:"2025" } ]},
+ { id:"in", name:"Infrastrutture", ind:[
+   { n:"Autorizzazioni Piombino e Oristano", v:"Piombino <b>prorogato per decreto</b> (marzo 2026); Regione Toscana contraria", soglia:"Contenzioso o revoca", st:"warn", src:"MASE, Regioni", freq:"Evento", when:"mar 2026" },
+   { n:"Incidenti notificati (NIS2) nel settore energia", v:"Dato riservato, non in fonte aperta", soglia:"Incidenti su sistemi di controllo", st:"nd", src:"ACN", freq:"Annuale", when:"—" },
+   { n:"Interruzioni di distribuzione estive", v:"Giugno 2026: interruzioni prolungate a <b>Torino, Milano, Napoli, Pescara</b>", soglia:"Peggioramento su base nazionale", st:"crit", src:"ARERA, continuità del servizio", freq:"Annuale", when:"giu 2026" } ]}
+];
+
+const SIGNALS = [
+ { name:"Calendario di Hormuz", now:"Proroghe della forza maggiore di trimestre in trimestre; cancellazioni fino a novembre.", to:"B" },
+ { name:"Stoccaggi UE al 1° novembre", now:"Oggi 63%: sotto la fascia 65-75% dello scenario B. Verdetto al 1° novembre.", to:"wait", lean:"B/C" },
+ { name:"Asta accumuli del 24 novembre", now:"La prima asta ha mostrato abbondanza di capitale; la seconda dirà se il rendimento decrescente frena.", to:"wait" },
+ { name:"Coincidenza climatica estiva", now:"Nel 2026 si è verificata (idro −15%, eolico −20%, domanda record). Da confermare nel 2027.", to:"wait", lean:"B" },
+ { name:"Nucleare francese in estate", now:"Disponibilità non acquisita; nel 2026 la Francia ha esportato a livelli record.", to:"nd" }
+];
+
+const STOCK = { // riempimento % 2026
+  dates:["7 lug","1 ago","4 ago","13 ago","28 ago"],
+  it:[69.0,75.8,76.3,78.2,82.0], ue:[50.0,57.1,57.7,59.9,63.0], soglia_it:75, soglia_ue:65 };
+const IMPORT = { years:["2023","2024","2025"], fr:[19.0,21.7,24.6], ch:[20.2,20.4,15.6], other:[12.0,8.9,6.7] };
+const FER = { months:["Giugno","Luglio"], y2025:[49.5,44.5], y2026:[47.0,41.5] };
+/* ================================================================== */
+
+const LAB = { crit:"Oltre soglia", warn:"Al limite", good:"Sotto soglia", nd:"Non disponibile" };
+const pill = st => `<span class="pill ${st}">${LAB[st]}</span>`;
+const $ = (s,el=document)=>el.querySelector(s);
+
+// --- tiles
+(function(){
+  const all = AREAS.flatMap(a=>a.ind);
+  const crit = all.filter(i=>i.st==="crit").length, warn = all.filter(i=>i.st==="warn").length, nd = all.filter(i=>i.st==="nd").length;
+  const areasCrit = AREAS.filter(a=>a.ind.some(i=>i.st==="crit")).length;
+  $("#tiles").innerHTML = `
+    <div class="card tile"><div class="label">Aree con almeno una soglia superata</div><div class="value">${areasCrit}<small>su ${AREAS.length}</small></div><div class="sub">Gas volume e prezzo, prezzo elettrico, transizione, infrastrutture</div></div>
+    <div class="card tile"><div class="label">Indicatori oltre soglia</div><div class="value">${crit}<small>su ${all.length}</small></div><div class="sub">${warn} al limite · ${all.length-crit-warn-nd} sotto soglia · ${nd} non disponibili</div></div>
+    <div class="card tile scen"><div class="label">Scenario in atto</div><div class="value">${SCENARIO.code} — ${SCENARIO.name}</div><div class="sub">${SCENARIO.why}</div></div>`;
+})();
+
+// --- signals
+$("#signals").innerHTML = SIGNALS.map(s=>{
+  const pts = ["A","B","C"].map(k=>{
+    let cls=""; if(s.to===k) cls="on"; else if(s.to==="wait" && s.lean && s.lean.includes(k)) cls="wait";
+    return `<span class="${cls}">${k}</span>`;
+  }).join("");
+  const tail = s.to==="wait" ? `<span class="wait" style="margin-left:4px">in attesa</span>` : s.to==="nd" ? `<span style="margin-left:4px">n.d.</span>` : "";
+  return `<div class="card sig"><div class="name">${s.name}</div><p class="now">${s.now}</p><div class="points" aria-label="Scenario indicato">${pts}${tail}</div></div>`;
+}).join("");
+
+// --- areas
+function renderAreas(filter){
+  $("#areas").innerHTML = AREAS.map(a=>{
+    const c=a.ind.filter(i=>i.st==="crit").length, w=a.ind.filter(i=>i.st==="warn").length;
+    const rows=a.ind.map(i=>{
+      const hide = filter!=="all" && i.st!==filter ? " hide":"";
+      return `<div class="ind${hide}"><div class="n">${i.n}</div><div>${pill(i.st)}</div><div class="v">${i.v}${i.note?` <span style="color:var(--ink-2)">— ${i.note}</span>`:""}</div><div class="t"><span>Soglia: ${i.soglia}</span><span>Fonte: ${i.src}</span><span>${i.freq}</span><span>Ultimo dato: ${i.when}</span></div></div>`;
+    }).join("");
+    return `<div class="card area"><div class="head"><h3>${a.name}</h3><span class="count">${c} oltre soglia · ${w} al limite</span></div>${rows}</div>`;
+  }).join("");
+}
+renderAreas("all");
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true"); renderAreas(b.dataset.f);
+}));
+
+// --- charts (SVG)
+const tip=$("#tip");
+function showTip(e,html){ tip.innerHTML=html; tip.style.left=e.clientX+"px"; tip.style.top=e.clientY+"px"; tip.classList.add("on"); }
+function hideTip(){ tip.classList.remove("on"); }
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs={},txt){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); if(txt!=null) n.textContent=txt; return n; }
+function fmt(v,d=1){ return v.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+function lineChart(host,{labels,series,ymin,ymax,refs,unit}){
+  const W=520,H=260,m={t:16,r:56,b:34,l:36}; const pw=W-m.l-m.r, ph=H-m.t-m.b;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Grafico a linee"});
+  const x=i=>m.l+i*(pw/(labels.length-1)), y=v=>m.t+ph-(v-ymin)/(ymax-ymin)*ph;
+  for(let g=ymin; g<=ymax; g+=10){ svg.appendChild(el("line",{x1:m.l,x2:W-m.r,y1:y(g),y2:y(g),class:"grid-line"})); svg.appendChild(el("text",{x:m.l-6,y:y(g)+4,"text-anchor":"end",class:"tick"},g+unit)); }
+  svg.appendChild(el("line",{x1:m.l,x2:W-m.r,y1:y(ymin),y2:y(ymin),class:"axis-line"}));
+  labels.forEach((l,i)=>svg.appendChild(el("text",{x:x(i),y:H-m.b+18,"text-anchor":"middle",class:"tick"},l)));
+  (refs||[]).forEach(r=>{ svg.appendChild(el("line",{x1:m.l,x2:W-m.r,y1:y(r.v),y2:y(r.v),class:"ref"})); svg.appendChild(el("text",{x:m.l+6,y:y(r.v)-4,class:"ref-l"},r.label)); });
+  series.forEach(s=>{
+    const d=s.data.map((v,i)=>(i?"L":"M")+x(i)+" "+y(v)).join(" ");
+    svg.appendChild(el("path",{d,fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"}));
+    s.data.forEach((v,i)=>{
+      svg.appendChild(el("circle",{cx:x(i),cy:y(v),r:i===s.data.length-1?4.5:3,fill:s.color,stroke:"var(--surface)","stroke-width":2}));
+      const hit=el("circle",{cx:x(i),cy:y(v),r:14,fill:"transparent",tabindex:"0",role:"img","aria-label":`${s.name} ${labels[i]}: ${fmt(v)}${unit}`});
+      hit.addEventListener("mousemove",e=>showTip(e,`<b>${s.name}</b> · ${labels[i]}<br>${fmt(v)}${unit}`)); hit.addEventListener("mouseleave",hideTip);
+      svg.appendChild(hit);
+    });
+    const last=s.data.length-1; svg.appendChild(el("text",{x:x(last)+8,y:y(s.data[last])-8,class:"dl"},`${s.name} ${fmt(s.data[last],0)}${unit}`));
+  });
+  host.appendChild(svg);
+}
+function barChart(host,{groups,series,ymax,unit,step}){
+  const W=520,H=260,m={t:16,r:12,b:34,l:36}; const pw=W-m.l-m.r, ph=H-m.t-m.b;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Grafico a barre"});
+  const gw=pw/groups.length, bw=Math.min(28,(gw-16)/series.length-2);
+  const y=v=>m.t+ph-v/ymax*ph;
+  for(let g=0; g<=ymax; g+=step){ svg.appendChild(el("line",{x1:m.l,x2:W-m.r,y1:y(g),y2:y(g),class:"grid-line"})); svg.appendChild(el("text",{x:m.l-6,y:y(g)+4,"text-anchor":"end",class:"tick"},g+unit)); }
+  svg.appendChild(el("line",{x1:m.l,x2:W-m.r,y1:y(0),y2:y(0),class:"axis-line"}));
+  groups.forEach((gname,gi)=>{
+    const gx=m.l+gi*gw+gw/2; svg.appendChild(el("text",{x:gx,y:H-m.b+18,"text-anchor":"middle",class:"tick"},gname));
+    const total=series.length*(bw+2)-2;
+    series.forEach((s,si)=>{
+      const v=s.data[gi], bx=gx-total/2+si*(bw+2), by=y(v), bh=y(0)-by;
+      const r=el("rect",{x:bx,y:by,width:bw,height:Math.max(bh,0),rx:4,fill:s.color});
+      svg.appendChild(el("rect",{x:bx,y:y(0)-2,width:bw,height:2,fill:s.color})); // ancora alla base (angoli arrotondati solo in alto)
+      svg.appendChild(r);
+      const hit=el("rect",{x:bx-2,y:m.t,width:bw+4,height:ph,fill:"transparent",tabindex:"0",role:"img","aria-label":`${s.name} ${gname}: ${fmt(v)}${unit}`});
+      hit.addEventListener("mousemove",e=>showTip(e,`<b>${s.name}</b> · ${gname}<br>${fmt(v)}${unit}`)); hit.addEventListener("mouseleave",hideTip);
+      svg.appendChild(hit);
+      if(s.label) svg.appendChild(el("text",{x:bx+bw/2,y:by-5,"text-anchor":"middle",class:"dl"},fmt(v,s.dec??1)));
+    });
+  });
+  host.appendChild(svg);
+}
+function legend(host,items){ host.innerHTML=items.map(i=>`<span><i style="background:${i.color}"></i>${i.name}</span>`).join(""); }
+function table(host,head,rows){ host.innerHTML=`<table><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td>${i?fmt(c):c}</td>`).join("")}</tr>`).join("")}</tbody></table>`; }
+
+// 1. stoccaggi
+(function(){ const c=$("#c-stock");
+  lineChart($(".plot",c),{labels:STOCK.dates,unit:"%",ymin:40,ymax:90,
+    series:[{name:"Italia",data:STOCK.it,color:"var(--s1)"},{name:"Media UE",data:STOCK.ue,color:"var(--s2)"}],
+    refs:[{v:STOCK.soglia_it,label:"soglia Italia 75%"},{v:STOCK.soglia_ue,label:"soglia UE 65%"}]});
+  legend($(".legend",c),[{name:"Italia",color:"var(--s1)"},{name:"Media UE",color:"var(--s2)"}]);
+  table($(".tbl",c),["Data","Italia %","Media UE %"],STOCK.dates.map((d,i)=>[d+" 2026",STOCK.it[i],STOCK.ue[i]]));
+})();
+// 2. import per frontiera
+(function(){ const c=$("#c-import");
+  barChart($(".plot",c),{groups:IMPORT.years,ymax:30,step:10,unit:"",
+    series:[{name:"Francia",data:IMPORT.fr,color:"var(--s1)",label:true},{name:"Svizzera",data:IMPORT.ch,color:"var(--s2)",label:true},{name:"Altre frontiere (netto)",data:IMPORT.other,color:"var(--s3)"}]});
+  legend($(".legend",c),[{name:"Francia",color:"var(--s1)"},{name:"Svizzera",color:"var(--s2)"},{name:"Altre frontiere (netto)",color:"var(--s3)"}]);
+  table($(".tbl",c),["Anno","Francia TWh","Svizzera TWh","Altre TWh"],IMPORT.years.map((y,i)=>[y,IMPORT.fr[i],IMPORT.ch[i],IMPORT.other[i]]));
+})();
+// 3. quota FER
+(function(){ const c=$("#c-fer");
+  barChart($(".plot",c),{groups:FER.months,ymax:60,step:20,unit:"%",
+    series:[{name:"2025",data:FER.y2025,color:"var(--hair-2)",label:true},{name:"2026",data:FER.y2026,color:"var(--s1)",label:true}]});
+  legend($(".legend",c),[{name:"2025 (stesso mese)",color:"var(--hair-2)"},{name:"2026",color:"var(--s1)"}]);
+  table($(".tbl",c),["Mese","2025 %","2026 %"],FER.months.map((mn,i)=>[mn,FER.y2025[i],FER.y2026[i]]));
+})();
+document.querySelectorAll(".chart .tv").forEach(b=>b.addEventListener("click",()=>{
+  const card=b.closest(".chart"); const on=card.classList.toggle("table"); b.textContent=on?"Vista grafico":"Vista tabella";
+}));
+</script>
