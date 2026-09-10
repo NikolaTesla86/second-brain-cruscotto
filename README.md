@@ -2,7 +2,11 @@
 
 `index.html` è il cruscotto di monitoraggio proposto nella sezione 5 del rapporto *La doppia dipendenza* (settembre 2026): 20 indicatori in 6 aree, soglie di attenzione, i cinque segnali che distinguono gli scenari al 2030 e tre grafici con vista tabella. È un unico file HTML senza dipendenze (i grafici sono SVG generati in pagina): si apre anche in locale con un doppio clic.
 
-## Aggiornare i valori
+## Aggiornamento automatico
+
+L'aggiornamento è affidato al comando `/aggiorna-cruscotto` (skill di progetto in `.claude/skills/aggiorna-cruscotto/`), che verifica ogni valore su due fonti indipendenti, aggiorna i dati, controlla la pagina, committa e pubblica. Tre attività pianificate nell'app lo lanciano alle cadenze del rapporto: settimanale gas/prezzi (lunedì, settembre-marzo), mensile elettrico (il 22, giugno-settembre), annuale transizione/infrastrutture (15 luglio). Può essere lanciato anche a mano in qualsiasi momento (`/aggiorna-cruscotto gas|elettrico|transizione|tutto`).
+
+## Dove stanno i valori (per interventi manuali)
 
 Tutti i dati sono nel blocco `DATI` in testa allo `<script>` di `index.html`:
 
