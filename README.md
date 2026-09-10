@@ -13,16 +13,29 @@ Tutti i dati sono nel blocco `DATI` in testa allo `<script>` di `index.html`:
 
 I contatori della "Lettura d'insieme" si ricalcolano da soli dagli stati.
 
-## Pubblicare con GitHub Pages (una volta sola)
+## Come è pubblicato (assetto scelto: vault privato + cruscotto pubblico)
 
-1. Creare un repository su GitHub (es. `second-brain-energia`) e collegarlo al vault:
+Due repository su GitHub, collegati al vault come remoti:
+
+| Remoto | Repository | Contenuto | Visibilità |
+|---|---|---|---|
+| `origin` | `NikolaTesla86/second-brain` | tutto il vault | privato |
+| `pages` | `NikolaTesla86/second-brain-cruscotto` | **solo** questa cartella `docs/` | pubblico → GitHub Pages |
+
+La cartella `docs/` viene copiata nel repository pubblico con `git subtree`, quindi il vault resta l'unica sorgente: si modifica qui, si committa, si pubblica.
+
+Sito: **https://nikolatesla86.github.io/second-brain-cruscotto/** (Pages attivato su `second-brain-cruscotto` → Settings → Pages → Deploy from a branch → `main` / `/ (root)`).
+
+## Aggiornare il cruscotto online
+
+1. Modifica `docs/index.html` (blocco `DATI`), poi:
    ```bash
-   git remote add origin https://github.com/<utente>/<repo>.git
-   git push -u origin main
+   git add docs && git commit -m "Cruscotto: aggiornamento dati <data>"
    ```
-2. Su GitHub: **Settings → Pages → Build and deployment → Source: "Deploy from a branch"**, branch `main`, cartella **`/docs`**, Save.
-3. Dopo un minuto la pagina è online su `https://<utente>.github.io/<repo>/`.
+2. Pubblica (spinge il vault sul privato e `docs/` sul pubblico):
+   ```bash
+   sh docs/publish.sh
+   ```
+Dopo circa un minuto il sito è aggiornato.
 
-Ogni aggiornamento successivo è un semplice commit + push di `docs/index.html`.
-
-> Nota: il resto del vault (note, ingestion, data lake) resta nel repository ma non viene pubblicato: Pages serve solo la cartella `docs/`. Se il repository deve restare privato, GitHub Pages richiede un piano a pagamento; in alternativa si può pubblicare solo `docs/` in un repository separato pubblico.
+L'autenticazione con GitHub avviene con la chiave SSH del Mac (`~/.ssh/id_ed25519`), registrata nell'account: non servono password o token.
